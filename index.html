@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文字数カウント</title>
+  <script src="./pure.js"></script>
+  <link rel="stylesheet" href="./pure.css">
+</head>
+
+<body>
+  <!--ヘッダー-->
+  <header>
+    <marquee behavior="scroll">
+      <img src="./header用ver2.png" alt="nagareru" width="250" height="50" align="left">
+    </marquee>
+    <marquee direction="right">
+      <p id="RealtimeClockArea"></p>
+    </marquee>
+  </header>
+  <!--短文-->
+  <div class="nasu">
+    <h1 class="tai">プレゼン練習トレーニングサイト：プレトレ</h1>
+    <h3 class="tai">このサイトではプレゼンの練習ができます。</h3>
+    <br>
+    <br>
+    <!--入力欄-->
+    <span id="span">
+
+      <textarea cols="24" rows="3" onkeyup="ShowLength(value);" style="width: 600px; height: 200px;"
+        value="幅200px, 高さ30px" id="kesu"></textarea>
+    </span>
+    <p id="inputlength">0文字</p>
+
+
+
+
+  </div>
+
+  <!--機能-->
+  <div class="area">
+    <!--tab1-->
+    <input type="radio" name="tab_name" id="tab1" checked>
+    <label class="tab_class" for="tab1">コピー機能</label>
+    <div class="content_class">
+      <!--テキストboxの操作機能-->
+      <br>
+      <button type="button" onclick="copy()" class="btn-flat-border">コピー</button>
+      <input type="button" value="クリア" onclick="clearTextarea()" class="btn-flat-border" />
+      <br>
+    </div>
+    <!--tab2-->
+    <input type="radio" name="tab_name" id="tab2">
+    <label class="tab_class" for="tab2">タイマー機能</label>
+    <div class="content_class">
+      <!--タイマー機能-->
+      <p>タイマー</p>
+      <form name="timer">
+        <input type="text" placeholder="半角で入力してね">分
+        <input type="text" placeholder="半角で入力してね">秒<br>
+        <br>
+        <input type="button" value="スタート" onclick="cntStart()" class="btn-flat-border">
+        <input type="button" value="ストップ" onclick="cntStop()" class="btn-flat-border">
+      </form>
+    </div>
+    <!--tab3-->
+    <input type="radio" name="tab_name" id="tab3">
+    <label class="tab_class" for="tab3">録音機能</label>
+    <div class="content_class">
+      <br>
+      <input type="button" value="スタート" class="btn-flat-border" id="text-button">
+      <p id="p1">録音中</p>
+      <input id="stop" type="button" class="btn-flat-border" value="ストップ">
+      <br>
+      <br>
+      <a id="download">Download</a>
+      <!--録音機能API Qiita(https://qiita.com/optimisuke/items/f1434d4a46afd667adc6)を参考に-->
+      <script>
+        document.getElementById("text-button").onclick = function () {
+
+          p1.style.display = "block";
+          // for html
+          const downloadLink = document.getElementById('download');
+          const stopButton = document.getElementById('stop');
+
+          // for audio
+          let audio_sample_rate = null;
+          let scriptProcessor = null;
+          let audioContext = null;
+
+          // audio data
+          let audioData = [];
+          let bufferSize = 1024;
+
+          let saveAudio = function () {
+            downloadLink.href = exportWAV(audioData);
+            downloadLink.download = 'test.wav';
+            downloadLink.click();
+
+            audioContext.close().then(function () {
+              stopButton.setAttribute('disabled', 'disabled');
+            });
+          }
+
+          // export WAV from audio float data
+          let exportWAV = function (audioData) {
+
+            let encodeWAV = function (samples, sampleRate) {
+              let buffer = new ArrayBuffer(44 + samples.length * 2);
+              let view = new DataView(buffer);
+
+              let writeString = function (view, offset, string) {
+                for (let i = 0; i < string.length; i++) {
+                  view.setUint8(offset + i, string.charCodeAt(i));
+                }
+              };
+
+              let floatTo16BitPCM = function (output, offset, input) {
+                for (let i = 0; i < input.length; i++, offset += 2) {
+                  let s = Math.max(-1, Math.min(1, input[i]));
+                  output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+                }
+              };
+
+              writeString(view, 0, 'RIFF');  // RIFFヘッダ
+              view.setUint32(4, 32 + samples.length * 2, true); // これ以降のファイルサイズ
+              writeString(view, 8, 'WAVE'); // WAVEヘッダ
+              writeString(view, 12, 'fmt '); // fmtチャンク
+              view.setUint32(16, 16, true); // fmtチャンクのバイト数
+              view.setUint16(20, 1, true); // フォーマットID
+              view.setUint16(22, 1, true); // チャンネル数
+              view.setUint32(24, sampleRate, true); // サンプリングレート
+              view.setUint32(28, sampleRate * 2, true); // データ速度
+              view.setUint16(32, 2, true); // ブロックサイズ
+              view.setUint16(34, 16, true); // サンプルあたりのビット数
+              writeString(view, 36, 'data'); // dataチャンク
+              view.setUint32(40, samples.length * 2, true); // 波形データのバイト数
+              floatTo16BitPCM(view, 44, samples); // 波形データ
+
+              return view;
+            };
+
+            let mergeBuffers = function (audioData) {
+              let sampleLength = 0;
+              for (let i = 0; i < audioData.length; i++) {
+                sampleLength += audioData[i].length;
+              }
+              let samples = new Float32Array(sampleLength);
+              let sampleIdx = 0;
+              for (let i = 0; i < audioData.length; i++) {
+                for (let j = 0; j < audioData[i].length; j++) {
+                  samples[sampleIdx] = audioData[i][j];
+                  sampleIdx++;
+                }
+              }
+              return samples;
+            };
+
+            let dataview = encodeWAV(mergeBuffers(audioData), audio_sample_rate);
+            let audioBlob = new Blob([dataview], { type: 'audio/wav' });
+            console.log(dataview);
+
+            let myURL = window.URL || window.webkitURL;
+            let url = myURL.createObjectURL(audioBlob);
+            return url;
+          };
+
+          // stop button
+          stopButton.addEventListener('click', function () {
+            saveAudio();
+            console.log('saved wav');
+            p1.style.display = "none";
+          });
+
+          // save audio data
+          var onAudioProcess = function (e) {
+            var input = e.inputBuffer.getChannelData(0);
+            var bufferData = new Float32Array(bufferSize);
+            for (var i = 0; i < bufferSize; i++) {
+              bufferData[i] = input[i];
+            }
+
+            audioData.push(bufferData);
+          };
+
+          // getusermedia
+          let handleSuccess = function (stream) {
+            audioContext = new AudioContext();
+            audio_sample_rate = audioContext.sampleRate;
+            console.log(audio_sample_rate);
+            scriptProcessor = audioContext.createScriptProcessor(bufferSize, 1, 1);
+            var mediastreamsource = audioContext.createMediaStreamSource(stream);
+            mediastreamsource.connect(scriptProcessor);
+            scriptProcessor.onaudioprocess = onAudioProcess;
+            scriptProcessor.connect(audioContext.destination);
+
+            console.log('record start?');
+
+            // when time passed without pushing the stop button
+            setTimeout(function () {
+              console.log("300 sec");
+              if (stopButton.disabled == false) {
+                saveAudio();
+                console.log("saved audio");
+              }
+            }, 400000);
+          };
+
+          // getUserMedia
+          navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+            .then(handleSuccess);
+        };
+      </script>
+    </div>
+    <!--tab4-->
+    <input type="radio" name="tab_name" id="tab4">
+    <label class="tab_class" for="tab4">翻訳機能</label>
+    <div class="content_class">
+      <!-- Google 翻訳  -->
+      <form method=get action="https://translate.google.com/" target="_blank">
+        <table bgcolor="#FFFFFF">
+          <tr>
+            <td>
+              <a href="https://translate.google.com/">
+                <img src="http://www.google.com/logos/Logo_40wht.gif" border="0" alt="Google" align="absmiddle"></a>
+              <input type=text name=q size=31 maxlength=255 value="">
+              <input type=hidden name=ie value=>
+              <input type=hidden name=oe value=>
+              <input type=hidden name=hl value="ja">
+              <input type=submit name=btnG value="Google翻訳">
+            </td>
+          </tr>
+        </table>
+      </form>
+    </div>
+    <!--tab5-->
+    <input type="radio" name="tab_name" id="tab5">
+    <label class="tab_class" for="tab5">いろいろ</label>
+    <div class="content_class2">
+      <!--説明-->
+      <h1>使い方</h1>
+      <h2>コピー機能　：ボタンを操作でコピー、一括<br>　　　　　　　
+        削除ができます</h2>
+      <h2>タイマー機能：好きな時間を入力して<br>　　　　　　　
+        スタートを押すとカウントが<br>　　　　　　　
+        始まります</h2>
+      <h2>
+        録音機能　　：スタートを押したら録音が<br>　　　　　　　
+        始まります。ストップを押し<br>　　　　　　　
+        たら自動的に音声ファイルが<br>　　　　　　　
+        ダウンロードされます。再度<br>　　　　　　　
+        使う場合はリロードしてくだ<br>
+        　　　　　　　
+        さい。(入力していた文は消え<br>　　　　　　　
+        るのでコピーを忘れずに)
+      </h2>
+      <h2>翻訳機能　　：何か困った時どうぞ</h2>
+
+
+
+    </div>
+    <!--目安-->
+    <br><br><br><br><br><br><br><br>
+    <div class="man">
+      <hr class="sen" />
+      <textarea cols="24" rows="3" onkeyup="ShowLength(value);" style="width: 350px; height: 200px;"
+        value="幅200px, 高さ30px" placeholder="メモ帳"></textarea>
+
+
+
+      <h1>文字数の目安</h1>
+      <table>
+        <tr>
+          <th>時間</th>
+          <th>文字数</th>
+        </tr>
+        <tr>
+          <td>1分</td>
+          <td>300字程度</td>
+        </tr>
+        <tr>
+          <td>3分</td>
+          <td>900字程度</td>
+        </tr>
+        <tr>
+          <td>5分</td>
+          <td>1500字程度</td>
+        </tr>
+      </table>
+      <p>※あくまで目安です。様々な意見があります</p>
+    </div>
+    <ul class="kajyo">
+      <h1>プレゼンで意識すべきこと</h1>
+      <p>・大きな声ではっきりと早口にならないように喋る</p>
+      <p>・堂々として胸を張る</p>
+      <p>・目線は聞き手に</p>
+    </ul>
+  </div>
+
+  <!-- footer -->
+  <footer>
+    フッター
+  </footer>
+
+</body>
+
+</html>
