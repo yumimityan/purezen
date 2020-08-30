@@ -1,0 +1,175 @@
+/*ヘッダー設定*/
+.hiyoko {
+  background: cadetblue;
+  color: #ffffff;
+  text-align : center;
+  padding : 10px ;
+  height: 80px;
+}
+
+/*アイキャッチ*/
+.aikyatti{
+    text-align: center;
+}
+
+/*タイトルの色指定*/
+.title{
+  color: cadetblue;
+}
+
+/*body設定*/
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/*5タブ*/
+.gotab {
+    width: 500px;
+    margin: auto;
+    flex-wrap: wrap;
+    display: flex;
+  }
+   
+  .tab_class {
+    width: calc(100%/5);
+    height: 50px;
+    background-color: darkgrey;
+    line-height: 50px;
+    font-size: 15px;
+    text-align: center;
+    display: block;
+    float: left;
+    order: -1;
+  }
+   
+  input[name="tab_name"] {
+    display: none;
+  }
+   
+  input:checked + .tab_class {
+    background-color: cadetblue;
+    color: aliceblue;
+  }
+   
+  .content_class {
+    display: none;
+    width: 100%;
+    text-align: center;
+  }
+   
+  input:checked + .tab_class + .content_class {
+    display: block;
+  }
+
+  .content_class_Left {
+    display: none;
+  }
+  input:checked + .tab_class + .content_class_Left {
+    display: block;
+  }
+  
+/*録音中のお知らせ色指定*/
+.p1{
+  color:cadetblue;
+}
+
+/*aタグ色指定*/
+a {
+  color: cadetblue;
+}
+
+/*ボタンの装飾*/
+  .btn-Setup{
+    display: inline-block;
+    padding: 0.3em 1em;
+    text-decoration: none;
+    color: cadetblue;
+    border: solid 2px cadetblue;
+    border-radius: 3px;
+    transition: .4s;
+  }
+  
+  .btn-Setup:hover {
+    background: cadetblue;
+    color: white;
+  }
+
+  /*仕切り線*/
+  .sen{
+    border-width: 1px 0 0 0;
+    border-style: solid;
+    border-color: #43a047;
+  }
+  
+  /*表*/
+  table{
+    width: 100%;
+    border-collapse:separate;
+    border-spacing: 0;
+  }
+  
+  table th:first-child{
+    border-radius: 5px 0 0 0;
+  }
+  
+  table th:last-child{
+    border-radius: 0 5px 0 0;
+    border-right: 1px solid #3c6690;
+  }
+  
+  table th{
+    color:white;
+    background: linear-gradient(cadetblue,cadetblue);
+    border-left: 1px solid cadetblue;
+    border-top: 1px solid cadetblue;
+    border-bottom: 1px solid cadetblue;
+    box-shadow: 0px 1px 1px rgba(255,255,255,0.3) inset;
+    width: 25%;
+    padding: 10px 0;
+  }
+  
+  table td{
+    border-left: 1px solid #a8b7c5;
+    border-bottom: 1px solid #a8b7c5;
+    border-top:none;
+    box-shadow: 0px -3px 5px 1px #eee inset;
+    width: 25%;
+    padding: 10px 0;
+  }
+  
+  table td:last-child{
+    border-right: 1px solid #a8b7c5;
+  }
+  
+  table tr:last-child td:first-child {
+    border-radius: 0 0 0 5px;
+  }
+  
+  table tr:last-child td:last-child {
+    border-radius: 0 0 5px 0;
+  }
+
+/*目安の形設定*/
+  .katati{
+    width: 100%;
+    text-align: center;
+  }
+
+/*注意点の色*/
+.aka{
+color: red;
+}
+
+/*フッター設定*/
+footer {
+  background: #333333;
+  color: #ffffff;
+  height: 75px;
+  display: flex;
+}
+
+/*動きの設定*/
+marquee{
+line-height: 40px;
+}
